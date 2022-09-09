@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
-public class ItemServiceImpl implements ItemService{
+public class ItemServiceImpl implements ItemService {
 
     private final Map<Long, Item> itemMap;
     private Long counter;
@@ -33,7 +33,7 @@ public class ItemServiceImpl implements ItemService{
     public List<ItemDto> getListItemByUserId(Long userId) {
         return itemMap.values()
                 .stream()
-                .filter(el->el.getOwner().getId().equals(userId))
+                .filter(el -> el.getOwner().getId().equals(userId))
                 .map(ItemMapper::toItemDto)
                 .collect(Collectors.toList());
     }
@@ -54,7 +54,7 @@ public class ItemServiceImpl implements ItemService{
         if (item.getAvailable() == null)
             throw new ValidationException("Доступность вещи не может быть пустой", "");
         item.setId(counter);
-        itemMap.put(counter,item);
+        itemMap.put(counter, item);
         counter++;
         return ItemMapper.toItemDto(item);
     }
@@ -80,7 +80,7 @@ public class ItemServiceImpl implements ItemService{
     public List<ItemDto> searchItem(String text) {
         return itemMap.values()
                 .stream()
-                .filter(el-> (!text.isEmpty() && (el.getName().toLowerCase(Locale.ROOT).contains(text.toLowerCase(Locale.ROOT)) ||
+                .filter(el -> (!text.isEmpty() && (el.getName().toLowerCase(Locale.ROOT).contains(text.toLowerCase(Locale.ROOT)) ||
                         el.getDescription().toLowerCase(Locale.ROOT).contains(text.toLowerCase(Locale.ROOT)))))
                 .filter(Item::getAvailable)
                 .map(ItemMapper::toItemDto)

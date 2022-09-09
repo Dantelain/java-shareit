@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 
 @Service
-public class UserServiceImpl implements UserService{
+public class UserServiceImpl implements UserService {
 
     private final Map<Long, User> userMap;
     private final Set<String> emailSet;
@@ -46,7 +46,7 @@ public class UserServiceImpl implements UserService{
             throw new BadRequestException("почта уже используется", userDto.getEmail());
         userDto.setId(counter);
         User user = UserMapper.toUser(userDto);
-        userMap.put(counter,user);
+        userMap.put(counter, user);
         counter++;
         emailSet.add(user.getEmail());
         return UserMapper.toUserDto(user);
@@ -64,7 +64,7 @@ public class UserServiceImpl implements UserService{
             emailSet.remove(email);
             emailSet.add(user.getEmail());
         }
-        userMap.put(userId,user);
+        userMap.put(userId, user);
         return UserMapper.toUserDto(user);
     }
 
