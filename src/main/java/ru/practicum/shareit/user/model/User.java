@@ -4,15 +4,12 @@ import lombok.Builder;
 import lombok.Data;
 
 
-/**
- * TODO Sprint add-controllers.
- */
 @Data
 @Builder
 public class User {
 
-    Long id;
-    String name;
-    String email;
+    private Long id;
+    private String name;
+    private String email;
 
 }

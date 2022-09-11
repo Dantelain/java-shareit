@@ -11,10 +11,10 @@ import javax.validation.constraints.NotBlank;
 @Builder
 public class UserDto {
 
-    Long id;
-    String name;
+    private Long id;
+    private String name;
     @NotBlank
     @Email(message = "Электронная почта должна содержать символ - @")
-    String email;
+    private String email;
 
 }
