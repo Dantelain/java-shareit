@@ -1,8 +1,7 @@
-package ru.practicum.shareit.booking.model;
+package ru.practicum.shareit.item.model;
 
 import lombok.*;
 import org.hibernate.Hibernate;
-import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
@@ -14,31 +13,33 @@ import java.util.Objects;
 @ToString
 @RequiredArgsConstructor
 @AllArgsConstructor
-@Entity
 @Builder
-public class Booking {
+@Entity
+public class Comment {
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private LocalDateTime dateStart;
-    private LocalDateTime dateEnd;
+    private String text;
     @OneToOne
     private Item item;
     @OneToOne
-    private User booker;
-    private Status status;
+    private User author;
+    private LocalDateTime created;
+
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
-        Booking booking = (Booking) o;
-        return id != null && Objects.equals(id, booking.id);
+        Comment comment = (Comment) o;
+        return id != null && Objects.equals(id, comment.id);
     }
 
     @Override
     public int hashCode() {
         return getClass().hashCode();
     }
+
 }

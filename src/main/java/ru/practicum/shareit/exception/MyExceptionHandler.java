@@ -23,4 +23,10 @@ public class MyExceptionHandler {
     public ResponseEntity<?> notFoundException(NotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
     }
+
+    @ExceptionHandler(StateConversionFailedException.class)
+    public ResponseEntity<MyError> stateConversionFailedException(StateConversionFailedException e) {
+        MyError error = new MyError(e.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
 }
