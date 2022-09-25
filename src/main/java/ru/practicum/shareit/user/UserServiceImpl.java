@@ -2,6 +2,8 @@ package ru.practicum.shareit.user;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
 
@@ -21,13 +23,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto getUserById(Long userId) {
-        User user = userRepository.getUserById(userId);
+        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь не найдена"));
         return UserMapper.toUserDto(user);
     }
 
     @Override
     public List<UserDto> getAllUser() {
-        return userRepository.getAllUser()
+        return userRepository.findAll()
                 .stream()
                 .map(UserMapper::toUserDto)
                 .collect(Collectors.toList());
@@ -35,19 +37,27 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto createUser(UserDto userDto) {
-        User user = userRepository.createUser(UserMapper.toUser(userDto));
+        if (userDto.getEmail() == null) {
+            userDto.setEmail(userDto.getName() + "@user.com");
+        }
+        User user = userRepository.saveAndFlush(UserMapper.toUser(userDto));
         return UserMapper.toUserDto(user);
     }
 
+    @Transactional
     @Override
     public UserDto editUser(Long userId, UserDto userDto) {
-        User user = UserMapper.toUser(userDto);
-        return UserMapper.toUserDto(userRepository.editUser(userId, user));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найдена"));
+        User userNew = UserMapper.toUser(userDto);
+        if (userNew.getName() != null) user.setName(userNew.getName());
+        if (userNew.getEmail() != null) user.setEmail(userNew.getEmail());
+        return UserMapper.toUserDto(userRepository.saveAndFlush(user));
     }
 
     @Override
     public void deleteUser(Long userId) {
-        userRepository.deleteUser(userId);
+        userRepository.deleteById(userId);
     }
 
 }
