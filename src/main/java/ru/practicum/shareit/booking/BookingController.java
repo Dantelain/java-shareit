@@ -3,7 +3,7 @@ package ru.practicum.shareit.booking;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.CreateBookingDto;
-import ru.practicum.shareit.booking.dto.ResponseBookingDto;
+import ru.practicum.shareit.booking.dto.ApprovedBookingDto;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -24,7 +24,7 @@ public class BookingController {
     }
 
     @PatchMapping("/{bookingId}")
-    public ResponseBookingDto approvedBooking(@RequestHeader("X-Sharer-User-Id") Long userId,
+    public ApprovedBookingDto approvedBooking(@RequestHeader("X-Sharer-User-Id") Long userId,
                                               @PathVariable Long bookingId,
                                               @RequestParam Boolean approved) {
         return bookingService.approvedBooking(userId, bookingId, approved);

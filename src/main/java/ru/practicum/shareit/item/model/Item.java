@@ -19,6 +19,7 @@ public class Item {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(length = 100, nullable = false)
     private String name;
     private String description;
     private Boolean available; //статус о том, доступна или нет вещь для аренды

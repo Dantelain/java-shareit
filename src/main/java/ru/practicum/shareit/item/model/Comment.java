@@ -21,10 +21,13 @@ public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(nullable = false)
     private String text;
-    @OneToOne
+    @ManyToOne
+    @JoinColumn(name = "item_id")
     private Item item;
-    @OneToOne
+    @ManyToOne
+    @JoinColumn(name = "author_id")
     private User author;
     private LocalDateTime created;
 

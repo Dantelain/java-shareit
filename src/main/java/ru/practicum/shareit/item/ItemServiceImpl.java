@@ -23,7 +23,6 @@ import ru.practicum.shareit.user.model.User;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Service
@@ -116,16 +115,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public List<ItemDto> searchItem(String text) {
         if (text == null || text.isEmpty()) return new ArrayList<>();
-        return itemRepository.findAll((root, query, criteriaBuilder) ->
-                        criteriaBuilder.and(
-                                criteriaBuilder.equal(root.get("available"), true),
-                                criteriaBuilder.or(
-                                        criteriaBuilder.like(criteriaBuilder.upper(root.get("name")), "%" + text.toUpperCase(Locale.ROOT) + "%"),
-                                        criteriaBuilder.like(criteriaBuilder.upper(root.get("description")), "%" + text.toUpperCase(Locale.ROOT) + "%")
-                                )))
-                .stream()
-                .map(ItemMapper::toItemDto)
-                .collect(Collectors.toList());
+        return itemRepository.searchText(text).stream().map(ItemMapper::toItemDto).collect(Collectors.toList());
     }
 
     @Override

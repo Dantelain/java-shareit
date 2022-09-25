@@ -2,7 +2,7 @@ package ru.practicum.shareit.booking;
 
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.CreateBookingDto;
-import ru.practicum.shareit.booking.dto.ResponseBookingDto;
+import ru.practicum.shareit.booking.dto.ApprovedBookingDto;
 
 import java.util.List;
 
@@ -10,7 +10,7 @@ import java.util.List;
 public interface BookingService {
     CreateBookingDto createBooking(Long userId, CreateBookingDto createBookingDto);
 
-    ResponseBookingDto approvedBooking(Long userId, Long bookingId, Boolean approved);
+    ApprovedBookingDto approvedBooking(Long userId, Long bookingId, Boolean approved);
 
     BookingDto getBookingById(Long userId, Long bookingId);
 

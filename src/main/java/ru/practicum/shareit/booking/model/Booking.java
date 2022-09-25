@@ -23,10 +23,13 @@ public class Booking {
     private Long id;
     private LocalDateTime dateStart;
     private LocalDateTime dateEnd;
-    @OneToOne
+    @ManyToOne
+    @JoinColumn(name = "item_id")
     private Item item;
-    @OneToOne
+    @ManyToOne
+    @JoinColumn(name = "booker_id")
     private User booker;
+    @Enumerated
     private Status status;
 
     @Override

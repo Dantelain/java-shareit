@@ -4,7 +4,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.CreateBookingDto;
-import ru.practicum.shareit.booking.dto.ResponseBookingDto;
+import ru.practicum.shareit.booking.dto.ApprovedBookingDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.State;
 import ru.practicum.shareit.booking.model.Status;
@@ -41,14 +41,17 @@ public class BookingServiceImpl implements BookingService {
         if (createBookingDto.getStart().isAfter(createBookingDto.getEnd())) {
             throw new ValidationException("Дата начала больше даты окончания", createBookingDto.getStart().toString());
         }
-        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь не найдена"));
-        Item item = itemRepository.findById(createBookingDto.getItemId()).orElseThrow(() -> new NotFoundException("Вещь не найдена"));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найдена"));
+        Item item = itemRepository.findById(createBookingDto.getItemId())
+                .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
         if (!item.getAvailable()) {
             throw new ValidationException("Вещь не доступна", item.getAvailable().toString());
         }
         if (item.getOwner().getId().equals(userId)) {
             throw new NotFoundException("Владелец не может брать вещь в аренду");
         }
+        //Список бронирований пересекующийся по датам начала и окончания с вещью заправшиваемой в createBookingDto
         List<Booking> bookingList = bookingRepository.findAll((root, query, criteriaBuilder) ->
                 criteriaBuilder.and(
                         criteriaBuilder.or(
@@ -64,7 +67,7 @@ public class BookingServiceImpl implements BookingService {
                         criteriaBuilder.equal(root.get("item"), createBookingDto.getItemId())
                 ));
         if (bookingList.size() > 0) {
-            throw new ValidationException("Бронирование не доступно", item.getAvailable().toString());
+            throw new ValidationException("Бронирование вещи в запрашиваемые даты не доступно", item.getAvailable().toString());
         }
         Booking booking = BookingMapper.toBooking(createBookingDto);
         booking.setBooker(user);
@@ -74,10 +77,11 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public ResponseBookingDto approvedBooking(Long userId, Long bookingId, Boolean approved) {
-        Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> new NotFoundException("Бронирование не найдено"));
+    public ApprovedBookingDto approvedBooking(Long userId, Long bookingId, Boolean approved) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new NotFoundException("Бронирование не найдено"));
         if (booking.getStatus().equals(Status.APPROVED) && approved || booking.getStatus().equals(Status.REJECTED) && !approved) {
-            throw new ValidationException("Бронирование уже подтверждено", "bookingId - " + bookingId);
+            throw new ValidationException("Бронирование уже подтверждено или отклонено", "bookingId - " + bookingId);
         }
         Item item = booking.getItem();
         if (!item.getOwner().getId().equals(userId)) {
@@ -88,7 +92,7 @@ public class BookingServiceImpl implements BookingService {
         } else {
             booking.setStatus(Status.REJECTED);
         }
-        return BookingMapper.toResponseBookingDto(bookingRepository.saveAndFlush(booking));
+        return BookingMapper.toApprovedBookingDto(bookingRepository.saveAndFlush(booking));
     }
 
     @Override
@@ -103,14 +107,22 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public List<BookingDto> getBookingAll(Long userId, String state, Boolean owner) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь не найдена"));
-        List<Long> itemIdList = itemRepository.findByOwner(user, Sort.by(Sort.Direction.ASC, "id")).stream().map(Item::getId).collect(Collectors.toList());
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найдена"));
+        List<Long> itemIdList = itemRepository.findByOwner(user, Sort.by(Sort.Direction.ASC, "id"))
+                .stream()
+                .map(Item::getId)
+                .collect(Collectors.toList());
         List<Booking> bookingList = bookingRepository.findAll((root, query, criteriaBuilder) ->
                 criteriaBuilder.and(
                         owner ? root.get("item").in(itemIdList) : criteriaBuilder.equal(root.get("booker"), user.getId()),
                         getStatePredicate(state, root, criteriaBuilder)
-                ), Sort.by(Sort.Direction.DESC, "dateStart"));
-        return bookingList.stream().map(BookingMapper::toBookingDto).collect(Collectors.toList());
+                ),
+                Sort.by(Sort.Direction.DESC, "dateStart"));
+        return bookingList
+                .stream()
+                .map(BookingMapper::toBookingDto)
+                .collect(Collectors.toList());
     }
 
     private Predicate getStatePredicate(String state, Root<Booking> root, CriteriaBuilder criteriaBuilder) {
@@ -119,6 +131,7 @@ public class BookingServiceImpl implements BookingService {
             LocalDateTime currentDate = LocalDateTime.now();
             Predicate predicate = root.isNotNull();
             switch (stateValue) {
+                //Текущие бронирования
                 case CURRENT:
                     predicate =
                             criteriaBuilder.and(
@@ -126,9 +139,11 @@ public class BookingServiceImpl implements BookingService {
                                     criteriaBuilder.greaterThan(root.get("dateEnd"), currentDate)
                             );
                     break;
+                //Будущие бронирования
                 case FUTURE:
                     predicate = criteriaBuilder.greaterThan(root.get("dateStart"), currentDate);
                     break;
+                //Завершенные бронирования
                 case PAST:
                     predicate =
                             criteriaBuilder.and(
@@ -137,9 +152,11 @@ public class BookingServiceImpl implements BookingService {
                                     criteriaBuilder.equal(root.get("status"), Status.APPROVED)
                             );
                     break;
+                //Бронирования со статусом ожидающие
                 case WAITING:
                     predicate = criteriaBuilder.equal(root.get("status"), Status.WAITING);
                     break;
+                //Бронирования со статусом отклоненные
                 case REJECTED:
                     predicate = criteriaBuilder.equal(root.get("status"), Status.REJECTED);
                     break;

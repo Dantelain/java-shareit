@@ -9,7 +9,7 @@ import ru.practicum.shareit.user.model.User;
 
 @Data
 @Builder
-public class ResponseBookingDto {
+public class ApprovedBookingDto {
 
     private Long id;
     private Item item;
