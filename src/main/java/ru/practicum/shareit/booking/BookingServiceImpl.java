@@ -1,10 +1,10 @@
 package ru.practicum.shareit.booking;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.CreateBookingDto;
-import ru.practicum.shareit.booking.dto.ApprovedBookingDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.State;
 import ru.practicum.shareit.booking.model.Status;
@@ -37,12 +37,12 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public CreateBookingDto createBooking(Long userId, CreateBookingDto createBookingDto) {
+    public BookingDto createBooking(Long userId, CreateBookingDto createBookingDto) {
         if (createBookingDto.getStart().isAfter(createBookingDto.getEnd())) {
             throw new ValidationException("Дата начала больше даты окончания", createBookingDto.getStart().toString());
         }
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь не найдена"));
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
         Item item = itemRepository.findById(createBookingDto.getItemId())
                 .orElseThrow(() -> new NotFoundException("Вещь не найдена"));
         if (!item.getAvailable()) {
@@ -51,7 +51,7 @@ public class BookingServiceImpl implements BookingService {
         if (item.getOwner().getId().equals(userId)) {
             throw new NotFoundException("Владелец не может брать вещь в аренду");
         }
-        //Список бронирований пересекующийся по датам начала и окончания с вещью заправшиваемой в createBookingDto
+        //Список бронирований пересекающийся по датам начала и окончания с вещью заправшиваемой в createBookingDto
         List<Booking> bookingList = bookingRepository.findAll((root, query, criteriaBuilder) ->
                 criteriaBuilder.and(
                         criteriaBuilder.or(
@@ -73,11 +73,11 @@ public class BookingServiceImpl implements BookingService {
         booking.setBooker(user);
         booking.setItem(item);
         booking.setStatus(Status.WAITING);
-        return BookingMapper.toCreateBookingDto(bookingRepository.saveAndFlush(booking));
+        return BookingMapper.toBookingDto(bookingRepository.saveAndFlush(booking));
     }
 
     @Override
-    public ApprovedBookingDto approvedBooking(Long userId, Long bookingId, Boolean approved) {
+    public BookingDto approvedBooking(Long userId, Long bookingId, Boolean approved) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Бронирование не найдено"));
         if (booking.getStatus().equals(Status.APPROVED) && approved || booking.getStatus().equals(Status.REJECTED) && !approved) {
@@ -92,7 +92,7 @@ public class BookingServiceImpl implements BookingService {
         } else {
             booking.setStatus(Status.REJECTED);
         }
-        return BookingMapper.toApprovedBookingDto(bookingRepository.saveAndFlush(booking));
+        return BookingMapper.toBookingDto(bookingRepository.saveAndFlush(booking));
     }
 
     @Override
@@ -108,18 +108,27 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public List<BookingDto> getBookingAll(Long userId, String state, Boolean owner) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь не найдена"));
-        List<Long> itemIdList = itemRepository.findByOwner(user, Sort.by(Sort.Direction.ASC, "id"))
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
+        return bookingRepository.findAll((root, query, criteriaBuilder) ->
+                        criteriaBuilder.and(
+                                owner ? root.get("item").in(getItemIdList(user)) : criteriaBuilder.equal(root.get("booker"), user.getId()),
+                                getStatePredicate(state, root, criteriaBuilder)
+                        ), Sort.by(Sort.Direction.DESC, "dateStart"))
                 .stream()
-                .map(Item::getId)
+                .map(BookingMapper::toBookingDto)
                 .collect(Collectors.toList());
-        List<Booking> bookingList = bookingRepository.findAll((root, query, criteriaBuilder) ->
-                criteriaBuilder.and(
-                        owner ? root.get("item").in(itemIdList) : criteriaBuilder.equal(root.get("booker"), user.getId()),
-                        getStatePredicate(state, root, criteriaBuilder)
-                ),
-                Sort.by(Sort.Direction.DESC, "dateStart"));
-        return bookingList
+    }
+
+    @Override
+    public List<BookingDto> getBookingAll(Long userId, String state, Boolean owner, Integer from, Integer size) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
+        int page = from / size;
+        return bookingRepository.findAll((root, query, criteriaBuilder) ->
+                        criteriaBuilder.and(
+                                owner ? root.get("item").in(getItemIdList(user)) : criteriaBuilder.equal(root.get("booker"), user.getId()),
+                                getStatePredicate(state, root, criteriaBuilder)
+                        ), PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "dateStart")))
                 .stream()
                 .map(BookingMapper::toBookingDto)
                 .collect(Collectors.toList());
@@ -166,4 +175,12 @@ public class BookingServiceImpl implements BookingService {
             throw new StateConversionFailedException(state);
         }
     }
+
+    private List<Long> getItemIdList(User user) {
+        return itemRepository.findByOwner(user, Sort.by(Sort.Direction.ASC, "id"))
+                .stream()
+                .map(Item::getId)
+                .collect(Collectors.toList());
+    }
+
 }

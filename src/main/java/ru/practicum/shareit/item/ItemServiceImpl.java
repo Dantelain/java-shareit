@@ -48,8 +48,7 @@ public class ItemServiceImpl implements ItemService {
                 .collect(Collectors.toList());
         List<Long> listItemId = itemList.stream().map(ItemBookingDto::getId).collect(Collectors.toList());
         List<Comment> commentList = commentRepository.findAll(((root, query, criteriaBuilder) -> root.get("item").in(listItemId)));
-        List<Booking> bookingList = bookingRepository.findAll(((root, query, criteriaBuilder) ->
-                root.get("item").in(listItemId)), Sort.by(Sort.Direction.DESC, "dateStart"));
+        List<Booking> bookingList = bookingRepository.findAll(((root, query, criteriaBuilder) -> root.get("item").in(listItemId)), Sort.by(Sort.Direction.DESC, "dateStart"));
         itemList.forEach((it) -> {
             setLastAndNextBooking(bookingList.stream().filter((el) -> el.getItem().getId().equals(it.getId())).collect(Collectors.toList()), it);
             List<CommentDto> commentDtoList = commentList.stream().map(CommentMapper::toCommentDto).collect(Collectors.toList());
@@ -61,10 +60,8 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemBookingDto getItemById(Long userId, Long itemId) {
         Item item = itemRepository.findById(itemId).orElseThrow(() -> new NotFoundException("Вещь не найдена"));
-        List<Comment> commentList = commentRepository.findAll((root, query, criteriaBuilder) ->
-                criteriaBuilder.equal(root.get("item"), itemId));
-        List<Booking> bookingList = bookingRepository.findAll((root, query, criteriaBuilder) ->
-                criteriaBuilder.equal(root.get("item"), itemId), Sort.by(Sort.Direction.DESC, "dateStart"));
+        List<Comment> commentList = commentRepository.findAll((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("item"), itemId));
+        List<Booking> bookingList = bookingRepository.findAll((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("item"), itemId), Sort.by(Sort.Direction.DESC, "dateStart"));
         ItemBookingDto itemBookingDto = ItemMapper.toItemBookingDto(item);
         List<CommentDto> commentDtoList = commentList.stream().map(CommentMapper::toCommentDto).collect(Collectors.toList());
         itemBookingDto.setComments(commentDtoList);
@@ -77,7 +74,7 @@ public class ItemServiceImpl implements ItemService {
     @Transactional
     @Override
     public ItemDto createItem(Long userId, ItemDto itemDto) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь не найдена"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь не найден"));
         Item item = ItemMapper.toItem(itemDto, user);
         if (item.getName() == null || item.getName().isEmpty()) {
             throw new ValidationException("Название вещи не может быть пустым", "");
@@ -94,7 +91,7 @@ public class ItemServiceImpl implements ItemService {
     @Transactional
     @Override
     public ItemDto editItem(Long userId, Long itemId, ItemDto itemDto) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь не найдена"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь не найден"));
         Item item = itemRepository.findById(itemId).orElseThrow(() -> new NotFoundException("Вещь не найдена"));
         Item itemNew = ItemMapper.toItem(itemDto, user);
         if (!item.getOwner().equals(itemNew.getOwner())) {
@@ -121,7 +118,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     @Transactional
     public CommentDto createComment(Long userId, Long itemId, CommentDto commentDto) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь не найдена"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь не найден"));
         Item item = itemRepository.findById(itemId).orElseThrow(() -> new NotFoundException("Вещь не найдена"));
         LocalDateTime created = LocalDateTime.now();
         List<Booking> bookingList = bookingRepository.findAll(((root, query, criteriaBuilder) ->

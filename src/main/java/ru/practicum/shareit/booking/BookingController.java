@@ -3,7 +3,7 @@ package ru.practicum.shareit.booking;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.CreateBookingDto;
-import ru.practicum.shareit.booking.dto.ApprovedBookingDto;
+import ru.practicum.shareit.exception.ValidationException;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -19,12 +19,12 @@ public class BookingController {
     }
 
     @PostMapping
-    public CreateBookingDto createBooking(@RequestHeader("X-Sharer-User-Id") Long userId, @Valid @RequestBody CreateBookingDto createBookingDto) {
+    public BookingDto createBooking(@RequestHeader("X-Sharer-User-Id") Long userId, @Valid @RequestBody CreateBookingDto createBookingDto) {
         return bookingService.createBooking(userId, createBookingDto);
     }
 
     @PatchMapping("/{bookingId}")
-    public ApprovedBookingDto approvedBooking(@RequestHeader("X-Sharer-User-Id") Long userId,
+    public BookingDto approvedBooking(@RequestHeader("X-Sharer-User-Id") Long userId,
                                               @PathVariable Long bookingId,
                                               @RequestParam Boolean approved) {
         return bookingService.approvedBooking(userId, bookingId, approved);
@@ -37,13 +37,37 @@ public class BookingController {
 
     @GetMapping
     public List<BookingDto> getBookingAll(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                          @RequestParam(required = false, defaultValue = "ALL") String state) {
-        return bookingService.getBookingAll(userId, state, false);
+                                          @RequestParam(required = false, defaultValue = "ALL") String state,
+                                          @RequestParam(required = false) Integer from,
+                                          @RequestParam(required = false) Integer size) {
+        if (from != null && from < 0) {
+            throw new ValidationException("Параметр from указан не верно", from.toString());
+        }
+        if (size != null && size <= 0) {
+            throw new ValidationException("Параметр size указан не верно", size.toString());
+        }
+        if (from == null || size == null) {
+            return bookingService.getBookingAll(userId, state, false);
+        } else {
+            return bookingService.getBookingAll(userId, state, false, from, size);
+        }
     }
 
     @GetMapping("/owner")
     public List<BookingDto> getBookingOwnerAll(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                               @RequestParam(required = false, defaultValue = "ALL") String state) {
-        return bookingService.getBookingAll(userId, state, true);
+                                               @RequestParam(required = false, defaultValue = "ALL") String state,
+                                               @RequestParam(required = false) Integer from,
+                                               @RequestParam(required = false) Integer size) {
+        if (from != null && from < 0) {
+            throw new ValidationException("Параметр from указан не верно", from.toString());
+        }
+        if (size != null && size <= 0) {
+            throw new ValidationException("Параметр size указан не верно", size.toString());
+        }
+        if (from == null || size == null) {
+            return bookingService.getBookingAll(userId, state, true);
+        } else {
+            return bookingService.getBookingAll(userId, state, true, from, size);
+        }
     }
 }
