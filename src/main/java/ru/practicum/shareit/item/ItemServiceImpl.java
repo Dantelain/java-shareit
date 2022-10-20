@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.BookingMapper;
 import ru.practicum.shareit.booking.BookingRepository;
-import ru.practicum.shareit.booking.dto.BookingItem;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.exception.NotFoundException;
@@ -48,11 +47,10 @@ public class ItemServiceImpl implements ItemService {
                 .collect(Collectors.toList());
         List<Long> listItemId = itemList.stream().map(ItemBookingDto::getId).collect(Collectors.toList());
         List<Comment> commentList = commentRepository.findAll(((root, query, criteriaBuilder) -> root.get("item").in(listItemId)));
-        List<Booking> bookingList = bookingRepository.findAll(((root, query, criteriaBuilder) ->
-                root.get("item").in(listItemId)), Sort.by(Sort.Direction.DESC, "dateStart"));
+        List<Booking> bookingList = bookingRepository.findAll(((root, query, criteriaBuilder) -> root.get("item").in(listItemId)), Sort.by(Sort.Direction.DESC, "dateStart"));
         itemList.forEach((it) -> {
             setLastAndNextBooking(bookingList.stream().filter((el) -> el.getItem().getId().equals(it.getId())).collect(Collectors.toList()), it);
-            List<CommentDto> commentDtoList = commentList.stream().map(CommentMapper::toCommentDto).collect(Collectors.toList());
+            List<ItemBookingDto.Comment> commentDtoList = commentList.stream().map(ItemMapper::toItemBookingDtoComment).collect(Collectors.toList());
             it.setComments(commentDtoList);
         });
         return itemList;
@@ -61,12 +59,10 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemBookingDto getItemById(Long userId, Long itemId) {
         Item item = itemRepository.findById(itemId).orElseThrow(() -> new NotFoundException("Вещь не найдена"));
-        List<Comment> commentList = commentRepository.findAll((root, query, criteriaBuilder) ->
-                criteriaBuilder.equal(root.get("item"), itemId));
-        List<Booking> bookingList = bookingRepository.findAll((root, query, criteriaBuilder) ->
-                criteriaBuilder.equal(root.get("item"), itemId), Sort.by(Sort.Direction.DESC, "dateStart"));
+        List<Comment> commentList = commentRepository.findAll((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("item"), itemId));
+        List<Booking> bookingList = bookingRepository.findAll((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("item"), itemId), Sort.by(Sort.Direction.DESC, "dateStart"));
         ItemBookingDto itemBookingDto = ItemMapper.toItemBookingDto(item);
-        List<CommentDto> commentDtoList = commentList.stream().map(CommentMapper::toCommentDto).collect(Collectors.toList());
+        List<ItemBookingDto.Comment> commentDtoList = commentList.stream().map(ItemMapper::toItemBookingDtoComment).collect(Collectors.toList());
         itemBookingDto.setComments(commentDtoList);
         if (item.getOwner().getId().equals(userId)) {
             setLastAndNextBooking(bookingList, itemBookingDto);
@@ -77,7 +73,7 @@ public class ItemServiceImpl implements ItemService {
     @Transactional
     @Override
     public ItemDto createItem(Long userId, ItemDto itemDto) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь не найдена"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь не найден"));
         Item item = ItemMapper.toItem(itemDto, user);
         if (item.getName() == null || item.getName().isEmpty()) {
             throw new ValidationException("Название вещи не может быть пустым", "");
@@ -94,7 +90,7 @@ public class ItemServiceImpl implements ItemService {
     @Transactional
     @Override
     public ItemDto editItem(Long userId, Long itemId, ItemDto itemDto) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь не найдена"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь не найден"));
         Item item = itemRepository.findById(itemId).orElseThrow(() -> new NotFoundException("Вещь не найдена"));
         Item itemNew = ItemMapper.toItem(itemDto, user);
         if (!item.getOwner().equals(itemNew.getOwner())) {
@@ -121,7 +117,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     @Transactional
     public CommentDto createComment(Long userId, Long itemId, CommentDto commentDto) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь не найдена"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь не найден"));
         Item item = itemRepository.findById(itemId).orElseThrow(() -> new NotFoundException("Вещь не найдена"));
         LocalDateTime created = LocalDateTime.now();
         List<Booking> bookingList = bookingRepository.findAll(((root, query, criteriaBuilder) ->
@@ -143,12 +139,12 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private void setLastAndNextBooking(List<Booking> bookingList, ItemBookingDto itemBookingDto) {
-        BookingItem lastBooking = bookingList.stream()
+        ItemBookingDto.BookingItem lastBooking = bookingList.stream()
                 .filter((e) -> e.getDateEnd().isBefore(LocalDateTime.now()))
                 .findFirst()
                 .map(BookingMapper::toBookingItem)
                 .orElse(null);
-        BookingItem nextBooking = bookingList.stream()
+        ItemBookingDto.BookingItem nextBooking = bookingList.stream()
                 .filter((e) -> e.getDateStart().isAfter(LocalDateTime.now()))
                 .findFirst()
                 .map(BookingMapper::toBookingItem)
