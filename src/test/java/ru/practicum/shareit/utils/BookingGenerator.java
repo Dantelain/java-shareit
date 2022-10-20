@@ -7,8 +7,9 @@ import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.Status;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class BookingGenerator {
@@ -25,12 +26,10 @@ public class BookingGenerator {
     }
 
     public static List<Booking> getBookings(int count) {
-        var listOfBookings = new ArrayList<Booking>();
-        for (int i = 0; i < count; i++) {
-            Long j = (long) (i + 1);
-            listOfBookings.add(getBooking(j));
-        }
-        return listOfBookings;
+        AtomicLong id = new AtomicLong(0L);
+        return Arrays.stream(new Integer[count])
+                .map((i) -> getBooking(id.incrementAndGet()))
+                .collect(Collectors.toList());
     }
 
     public static CreateBookingDto getCreateBookingDto(Long id) {

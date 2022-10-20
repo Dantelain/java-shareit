@@ -5,15 +5,12 @@ import ru.practicum.shareit.item.dto.ItemBookingDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class ItemGenerator {
-
-    public static Item getItem() {
-        return getItem(1L);
-    }
 
     public static Item getItem(Long id) {
         return Item.builder()
@@ -26,10 +23,6 @@ public class ItemGenerator {
                 .build();
     }
 
-    public static ItemDto getItemDto() {
-        return ItemMapper.toItemDto(getItem());
-    }
-
     public static ItemDto getItemDto(Long id) {
         return ItemMapper.toItemDto(getItem(id));
     }
@@ -39,12 +32,10 @@ public class ItemGenerator {
     }
 
     public static List<Item> getItems(int count) {
-        var listOfItem = new ArrayList<Item>();
-        for (int i = 0; i < count; i++) {
-            Long j = (long) (i + 1);
-            listOfItem.add(getItem(j));
-        }
-        return listOfItem;
+        AtomicLong id = new AtomicLong(0L);
+        return Arrays.stream(new Integer[count])
+                .map((i) -> getItem(id.incrementAndGet()))
+                .collect(Collectors.toList());
     }
 
     public static List<ItemDto> getItemsDto(int count) {

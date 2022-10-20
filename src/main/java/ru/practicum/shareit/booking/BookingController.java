@@ -1,15 +1,19 @@
 package ru.practicum.shareit.booking;
 
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.CreateBookingDto;
 import ru.practicum.shareit.exception.ValidationException;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
 @RestController
 @RequestMapping(path = "/bookings")
+@Validated
 public class BookingController {
 
     private final BookingService bookingService;
@@ -38,14 +42,8 @@ public class BookingController {
     @GetMapping
     public List<BookingDto> getBookingAll(@RequestHeader("X-Sharer-User-Id") Long userId,
                                           @RequestParam(required = false, defaultValue = "ALL") String state,
-                                          @RequestParam(required = false) Integer from,
-                                          @RequestParam(required = false) Integer size) {
-        if (from != null && from < 0) {
-            throw new ValidationException("Параметр from указан не верно", from.toString());
-        }
-        if (size != null && size <= 0) {
-            throw new ValidationException("Параметр size указан не верно", size.toString());
-        }
+                                          @RequestParam(required = false) @PositiveOrZero Integer from,
+                                          @RequestParam(required = false) @Positive Integer size) {
         if (from == null || size == null) {
             return bookingService.getBookingAll(userId, state, false);
         } else {

@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.BookingMapper;
 import ru.practicum.shareit.booking.BookingRepository;
-import ru.practicum.shareit.booking.dto.BookingItem;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.exception.NotFoundException;
@@ -51,7 +50,7 @@ public class ItemServiceImpl implements ItemService {
         List<Booking> bookingList = bookingRepository.findAll(((root, query, criteriaBuilder) -> root.get("item").in(listItemId)), Sort.by(Sort.Direction.DESC, "dateStart"));
         itemList.forEach((it) -> {
             setLastAndNextBooking(bookingList.stream().filter((el) -> el.getItem().getId().equals(it.getId())).collect(Collectors.toList()), it);
-            List<CommentDto> commentDtoList = commentList.stream().map(CommentMapper::toCommentDto).collect(Collectors.toList());
+            List<ItemBookingDto.Comment> commentDtoList = commentList.stream().map(ItemMapper::toItemBookingDtoComment).collect(Collectors.toList());
             it.setComments(commentDtoList);
         });
         return itemList;
@@ -63,7 +62,7 @@ public class ItemServiceImpl implements ItemService {
         List<Comment> commentList = commentRepository.findAll((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("item"), itemId));
         List<Booking> bookingList = bookingRepository.findAll((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("item"), itemId), Sort.by(Sort.Direction.DESC, "dateStart"));
         ItemBookingDto itemBookingDto = ItemMapper.toItemBookingDto(item);
-        List<CommentDto> commentDtoList = commentList.stream().map(CommentMapper::toCommentDto).collect(Collectors.toList());
+        List<ItemBookingDto.Comment> commentDtoList = commentList.stream().map(ItemMapper::toItemBookingDtoComment).collect(Collectors.toList());
         itemBookingDto.setComments(commentDtoList);
         if (item.getOwner().getId().equals(userId)) {
             setLastAndNextBooking(bookingList, itemBookingDto);
@@ -140,12 +139,12 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private void setLastAndNextBooking(List<Booking> bookingList, ItemBookingDto itemBookingDto) {
-        BookingItem lastBooking = bookingList.stream()
+        ItemBookingDto.BookingItem lastBooking = bookingList.stream()
                 .filter((e) -> e.getDateEnd().isBefore(LocalDateTime.now()))
                 .findFirst()
                 .map(BookingMapper::toBookingItem)
                 .orElse(null);
-        BookingItem nextBooking = bookingList.stream()
+        ItemBookingDto.BookingItem nextBooking = bookingList.stream()
                 .filter((e) -> e.getDateStart().isAfter(LocalDateTime.now()))
                 .findFirst()
                 .map(BookingMapper::toBookingItem)

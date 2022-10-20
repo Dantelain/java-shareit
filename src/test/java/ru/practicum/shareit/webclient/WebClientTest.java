@@ -44,7 +44,7 @@ public class WebClientTest {
         headers.set("X-Sharer-User-Id", "1");
         RequestEntity<BookingDto> requestBooking = new RequestEntity<>(headers, HttpMethod.GET, URI.create("http://localhost:" + port + "/bookings?state=all&from=-1&size=10"));
         ResponseEntity<String> exchangeBooking = this.restTemplate.exchange(requestBooking, String.class);
-        assertEquals(HttpStatus.BAD_REQUEST, exchangeBooking.getStatusCode());
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, exchangeBooking.getStatusCode());
 
         RequestEntity<UserDto> requestUser = new RequestEntity<>(UserGenerator.getUserDto(1L), HttpMethod.POST, URI.create("http://localhost:" + port + "/users"));
         ResponseEntity<UserDto> exchangeUser = this.restTemplate.exchange(requestUser, UserDto.class);

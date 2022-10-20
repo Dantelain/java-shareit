@@ -8,7 +8,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.utils.ItemRequestGenerator;
 
@@ -96,23 +95,4 @@ class ItemRequestControllerTest {
         verifyNoInteractions(itemRequestService);
     }
 
-    @Test
-    void getAllItemRequestNegativeFrom() {
-        when(itemRequestService.getAllItemRequest(anyLong(), anyInt(), anyInt())).thenAnswer(invocationOnMock -> {
-            Integer index = invocationOnMock.getArgument(2);
-            return ItemRequestGenerator.getItemRequestsDto(index, 3);
-        });
-        assertThrows(ValidationException.class, () -> itemRequestController.getAllItemRequest(2L, -3, 2));
-        verifyNoInteractions(itemRequestService);
-    }
-
-    @Test
-    void getAllItemRequestNegativeSize() {
-        when(itemRequestService.getAllItemRequest(anyLong(), anyInt(), anyInt())).thenAnswer(invocationOnMock -> {
-            Integer index = invocationOnMock.getArgument(2);
-            return ItemRequestGenerator.getItemRequestsDto(index, 3);
-        });
-        assertThrows(ValidationException.class, () -> itemRequestController.getAllItemRequest(2L, 4, -2));
-        verifyNoInteractions(itemRequestService);
-    }
 }

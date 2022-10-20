@@ -1,14 +1,16 @@
 package ru.practicum.shareit.request.dto;
 
-import lombok.Builder;
-import lombok.Data;
-import ru.practicum.shareit.item.dto.ItemDto;
+import lombok.*;
 
 import javax.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
+@AllArgsConstructor
 @Builder
 public class ItemRequestDto {
 
@@ -16,6 +18,19 @@ public class ItemRequestDto {
     @NotBlank
     private String description;
     private LocalDateTime created;
-    private List<ItemDto> items;
+    private List<Item> items;
 
+    @Getter
+    @Setter
+    @ToString
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class Item {
+        private Long id;
+        private String name;
+        private String description;
+        private Boolean available;
+        private Long requestId;
+    }
 }

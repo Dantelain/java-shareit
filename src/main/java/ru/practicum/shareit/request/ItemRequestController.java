@@ -1,16 +1,19 @@
 package ru.practicum.shareit.request;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.ArrayList;
 import java.util.List;
 
 @RestController
 @RequestMapping(path = "/requests")
+@Validated
 public class ItemRequestController {
 
     private final ItemRequestService itemRequestService;
@@ -34,16 +37,10 @@ public class ItemRequestController {
 
     @GetMapping("/all")
     public List<ItemRequestDto> getAllItemRequest(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                                  @RequestParam(required = false) Integer from,
-                                                  @RequestParam(required = false) Integer size) {
+                                                  @RequestParam(required = false) @PositiveOrZero Integer from,
+                                                  @RequestParam(required = false) @Positive Integer size) {
         if (from == null || size == null) {
             return new ArrayList<>();
-        }
-        if (from < 0) {
-            throw new ValidationException("Параметр from указан не верно", from.toString());
-        }
-        if (size <= 0) {
-            throw new ValidationException("Параметр size указан не верно", size.toString());
         }
         return itemRequestService.getAllItemRequest(userId, from, size);
     }

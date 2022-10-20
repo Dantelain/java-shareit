@@ -4,8 +4,9 @@ import ru.practicum.shareit.user.UserMapper;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class UserGenerator {
@@ -23,16 +24,10 @@ public class UserGenerator {
     }
 
     public static List<User> getUsers(int count) {
-        var listOfUsers = new ArrayList<User>();
-        for (int i = 0; i < count; i++) {
-            Long j = (long) (i + 1);
-            listOfUsers.add(getUser(j));
-        }
-        return listOfUsers;
-    }
-
-    public static UserDto getUserDto() {
-        return UserMapper.toUserDto(getUser(1L));
+        AtomicLong id = new AtomicLong(0L);
+        return Arrays.stream(new Integer[count])
+                .map((i) -> getUser(id.incrementAndGet()))
+                .collect(Collectors.toList());
     }
 
     public static UserDto getUserDto(Long userId) {

@@ -6,6 +6,7 @@ import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.request.model.ItemRequest;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class ItemRequestMapper {
@@ -15,7 +16,7 @@ public class ItemRequestMapper {
                 .id(itemRequest.getId())
                 .description(itemRequest.getDescription())
                 .created(itemRequest.getCreated())
-                .items(itemDtoList)
+                .items(itemDtoList.stream().map(ItemRequestMapper::getItems).collect(Collectors.toList()))
                 .build();
     }
 
@@ -26,4 +27,15 @@ public class ItemRequestMapper {
                 .created(itemRequestDto.getCreated())
                 .build();
     }
+
+    private static ItemRequestDto.Item getItems(ItemDto itemDto) {
+        return ItemRequestDto.Item.builder()
+                .id(itemDto.getId())
+                .name(itemDto.getName())
+                .description(itemDto.getDescription())
+                .available(itemDto.getAvailable())
+                .requestId(itemDto.getRequestId())
+                .build();
+    }
+
 }

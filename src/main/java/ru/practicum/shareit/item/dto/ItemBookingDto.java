@@ -1,12 +1,15 @@
 package ru.practicum.shareit.item.dto;
 
-import lombok.Builder;
-import lombok.Data;
-import ru.practicum.shareit.booking.dto.BookingItem;
+import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
+@AllArgsConstructor
 @Builder
 public class ItemBookingDto {
 
@@ -17,6 +20,29 @@ public class ItemBookingDto {
     private Long request; //ссылка на запрос другого пользователя по которому была создана вещь
     private BookingItem lastBooking;
     private BookingItem nextBooking;
-    private List<CommentDto> comments;
+    private List<Comment> comments;
 
+    @Getter
+    @Setter
+    @ToString
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class BookingItem {
+        private Long id;
+        private Long bookerId;
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class Comment {
+        private Long id;
+        private String text;
+        private String authorName;
+        private LocalDateTime created;
+    }
 }

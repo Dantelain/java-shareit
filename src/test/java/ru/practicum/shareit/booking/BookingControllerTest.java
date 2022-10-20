@@ -84,8 +84,6 @@ class BookingControllerTest {
     @Test
     void getBookingAllFail() {
         when(bookingService.getBookingAll(anyLong(), anyString(), anyBoolean())).thenReturn(BookingGenerator.getBookingsDto(4));
-        assertThrows(ValidationException.class, () -> bookingController.getBookingAll(1L, "All", -10, 10));
-        assertThrows(ValidationException.class, () -> bookingController.getBookingAll(1L, "All", 0, -10));
         List<BookingDto> bookingDtoList = bookingController.getBookingAll(1L, "All", null, 10);
         assertEquals(4, bookingDtoList.size());
         bookingDtoList = bookingController.getBookingAll(1L, "All", 0, null);

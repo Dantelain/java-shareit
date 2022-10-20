@@ -5,15 +5,12 @@ import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.request.model.ItemRequest;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class ItemRequestGenerator {
-
-    public static ItemRequest getItemRequest() {
-        return getItemRequest(1L);
-    }
 
     public static ItemRequest getItemRequest(Long id) {
         return ItemRequest.builder()
@@ -25,12 +22,10 @@ public class ItemRequestGenerator {
     }
 
     public static List<ItemRequest> getItemRequests(int count) {
-        var listOfItemRequests = new ArrayList<ItemRequest>();
-        for (int i = 0; i < count; i++) {
-            Long j = (long) (i + 1);
-            listOfItemRequests.add(getItemRequest(j));
-        }
-        return listOfItemRequests;
+        AtomicLong id = new AtomicLong(0L);
+        return Arrays.stream(new Integer[count])
+                .map((i) -> getItemRequest(id.incrementAndGet()))
+                .collect(Collectors.toList());
     }
 
     public static ItemRequestDto getItemRequestDto(Long id, int itemCount) {
